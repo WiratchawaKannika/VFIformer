@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import torch
-
+import os
 import getopt
 import math
 import numpy
@@ -11,6 +11,9 @@ import PIL.Image
 import sys
 import numpy as np
 import time
+
+# os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   
+# os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 try:
 	from .correlation import correlation # the custom cost volume layer
@@ -175,10 +178,14 @@ class Network(torch.nn.Module):
 				# end
 
 				if self.netUpcorr is None:
-					tenCorrelation = torch.nn.functional.leaky_relu(input=correlation.FunctionCorrelation(tenFirst=tenFeaturesFirst, tenSecond=tenFeaturesSecond, intStride=1), negative_slope=0.1, inplace=False)
+# 					tenCorrelation = torch.nn.functional.leaky_relu(input=correlation.FunctionCorrelation(tenFirst=tenFeaturesFirst, tenSecond=tenFeaturesSecond, intStride=1), negative_slope=0.1, inplace=False)
+					tenCorrelation = torch.nn.functional.leaky_relu(input=correlation.FunctionCorrelation(tenOne=tenFeaturesFirst, tenTwo=tenFeaturesSecond, intStride=1), negative_slope=0.1, inplace=False)
 
+# 				elif self.netUpcorr is not None:
+# 					tenCorrelation = self.netUpcorr(torch.nn.functional.leaky_relu(input=correlation.FunctionCorrelation(tenFirst=tenFeaturesFirst, tenSecond=tenFeaturesSecond, intStride=2), negative_slope=0.1, inplace=False))
+####
 				elif self.netUpcorr is not None:
-					tenCorrelation = self.netUpcorr(torch.nn.functional.leaky_relu(input=correlation.FunctionCorrelation(tenFirst=tenFeaturesFirst, tenSecond=tenFeaturesSecond, intStride=2), negative_slope=0.1, inplace=False))
+					tenCorrelation = self.netUpcorr(torch.nn.functional.leaky_relu(input=correlation.FunctionCorrelation(tenOne=tenFeaturesFirst, tenTwo=tenFeaturesSecond, intStride=2), negative_slope=0.1, inplace=False))
 
 				# end
 
@@ -298,7 +305,7 @@ class Network(torch.nn.Module):
 		self.netSubpixel = torch.nn.ModuleList([ Subpixel(intLevel) for intLevel in [ 2, 3, 4, 5, 6 ] ])
 		self.netRegularization = torch.nn.ModuleList([ Regularization(intLevel) for intLevel in [ 2, 3, 4, 5, 6 ] ])
 
-		self.load_state_dict({ strKey[7:]: tenWeight for strKey, tenWeight in torch.load('checkpoints/finetuned-liteflownet-epoch1.pkl').items() })
+		self.load_state_dict({ strKey[7:]: tenWeight for strKey, tenWeight in torch.load('/media/SSD/Vimeo-90KDataset/model_pytorch-liteflownet/finetuned-liteflownet-epoch1.pkl').items() })
 		#checkpoint = torch.load('checkpoints/atd20k_finetune/model_29.pth')
 		#self.load_state_dict(checkpoint['state_dict'])
 	# end
@@ -375,8 +382,8 @@ def estimate(tenFirst, tenSecond):
 ##########################################################
 
 if __name__ == '__main__':
-	img_root = 'yourpath/vimeo_triplet/sequences'
-	dst_flow_root = 'yourpath/flows'
+	img_root = '/media/SSD/Vimeo-90KDataset/vimeo_triplet/sequences'
+	dst_flow_root = '/media/SSD/Vimeo-90KDataset/flows'
 	if not os.path.exists(dst_flow_root):
 		os.mkdir(dst_flow_root)
 	for idx, name in enumerate(sorted(os.listdir(img_root))):
@@ -400,29 +407,37 @@ if __name__ == '__main__':
 			img_path2 = os.path.join(img_subdir, 'im2.png')
 			img_path3 = os.path.join(img_subdir, 'im3.png')
 
-			if not os.path.exists(flo_subdir):
-				os.mkdir(flo_subdir)
-			dst_path21 = os.path.join(flo_subdir, 'flo21.npy')
-			dst_path23 = os.path.join(flo_subdir, 'flo23.npy')
-
-			ten1 = torch.FloatTensor(numpy.ascontiguousarray(
-				numpy.array(PIL.Image.open(img_path1))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
+# 			if not os.path.exists(flo_subdir):
+# 				os.mkdir(flo_subdir)
+# 			dst_path21 = os.path.join(flo_subdir, 'flo21.npy')
+# 			dst_path23 = os.path.join(flo_subdir, 'flo23.npy')
+			try:
+				ten1 = torch.FloatTensor(numpy.ascontiguousarray(
+					numpy.array(PIL.Image.open(img_path1))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
+							1.0 / 255.0)))
+				ten2 = torch.FloatTensor(numpy.ascontiguousarray(
+					numpy.array(PIL.Image.open(img_path2))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
+							1.0 / 255.0)))
+				ten3 = torch.FloatTensor(numpy.ascontiguousarray(
+					numpy.array(PIL.Image.open(img_path3))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
 						1.0 / 255.0)))
-			ten2 = torch.FloatTensor(numpy.ascontiguousarray(
-				numpy.array(PIL.Image.open(img_path2))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
-						1.0 / 255.0)))
-			ten3 = torch.FloatTensor(numpy.ascontiguousarray(
-				numpy.array(PIL.Image.open(img_path3))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
-					1.0 / 255.0)))
+                
+				if not os.path.exists(flo_subdir):
+					os.mkdir(flo_subdir)
+				dst_path21 = os.path.join(flo_subdir, 'flo21.npy')
+				dst_path23 = os.path.join(flo_subdir, 'flo23.npy')
 
-			flo21 = estimate(ten2, ten1)
-			flo23 = estimate(ten2, ten3)
+				flo21 = estimate(ten2, ten1)
+				flo23 = estimate(ten2, ten3)
 
-			#print('flo21: ' + str(flo21.shape))
-			with open(dst_path21, 'wb') as f21:
-				np.save(f21, flo21)
-			with open(dst_path23, 'wb') as f23:
-				np.save(f23, flo23)
+				#print('flo21: ' + str(flo21.shape))
+				with open(dst_path21, 'wb') as f21:
+					np.save(f21, flo21)
+				with open(dst_path23, 'wb') as f23:
+					np.save(f23, flo23)
 
-			f21.close()
-			f23.close()
+				f21.close()
+				f23.close()
+			except:
+				pass
+                
