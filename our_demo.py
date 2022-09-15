@@ -115,7 +115,11 @@ def main():
     divisor = 64
     multi = 3
     
-    with open(os.path.join(args.data_root, 'test-demo.txt'), 'r') as txt:
+    pth = args.data_root
+    test_demo = glob.glob(f"{pth}*-demo.txt")
+    test_demo = test_demo[0]
+   # with open(os.path.join(args.data_root, 'test-demo.txt'), 'r') as txt:
+    with open(test_demo, 'r') as txt:
          sequence_list = [line.strip() for line in txt]
     for seq in sequence_list:
         img0_path, img1_path = seq.split(' ')
@@ -146,7 +150,8 @@ def main():
             output = output[:, :, pad_t:h-pad_d, pad_l:w-pad_r]
 
         imt = output[0].flip(dims=(0,)).clamp(0., 1.)
-        torchvision.utils.save_image(imt, os.path.join(save_path, os.path.basename(img0_path).split('.')[0]+'_inter'+'.png'))
+        #torchvision.utils.save_image(imt, os.path.join(save_path, os.path.basename(img0_path).split('.')[0]+'_inter'+'.png'))
+        torchvision.utils.save_image(imt, os.path.join(save_path, os.path.basename(img0_path).split('.')[0]+'_inter'+'.jpg'))
         torch.cuda.empty_cache()
         print('result saved!')
 
