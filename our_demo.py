@@ -151,7 +151,7 @@ def main():
 
         imt = output[0].flip(dims=(0,)).clamp(0., 1.)
         #torchvision.utils.save_image(imt, os.path.join(save_path, os.path.basename(img0_path).split('.')[0]+'_inter'+'.png'))
-        torchvision.utils.save_image(imt, os.path.join(save_path, os.path.basename(img0_path).split('.')[0]+'_inter'+'.jpg'))
+        torchvision.utils.save_image(imt, os.path.join(save_path, os.path.basename(img0_path).split('.')[0]+'_inter'+'.png'))
         torch.cuda.empty_cache()
         print('result saved!')
 
