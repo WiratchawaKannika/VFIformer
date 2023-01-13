@@ -126,8 +126,7 @@ def main():
             import imageio
             os.makedirs(save_pathimg, exist_ok=True) 
             
-            SHOW_pathimg = save_pathimg.split('/')[:-2]
-            SHOW_pathimg_ = '/'.join(SHOW_pathimg) 
+             
                 
             img0 = cv2.imread(img0_path)
             img1 = cv2.imread(img1_path)
@@ -158,6 +157,8 @@ def main():
             #torch.cuda.empty_cache()
             #time.sleep(0.5)
             print('result saved!')
+       SHOW_pathimg = save_pathimg.split('/')[:7]
+       SHOW_pathimg_ = '/'.join(SHOW_pathimg)
        print('Frame Interpolation saVe at -->>', SHOW_pathimg_)
        print('*'*120)
     else:
