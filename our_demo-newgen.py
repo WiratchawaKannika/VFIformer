@@ -125,7 +125,10 @@ def main():
             save_pathimg = folder_name_.replace("rheology2023", "Frame_Inter_rheology2023/broken-images/Frame_Inter/VFIformer")
             import imageio
             os.makedirs(save_pathimg, exist_ok=True) 
-
+            
+            SHOW_pathimg = save_pathimg.split('/')[:-2]
+            SHOW_pathimg_ = '/'.join(SHOW_pathimg) 
+                
             img0 = cv2.imread(img0_path)
             img1 = cv2.imread(img1_path)
 
@@ -155,7 +158,7 @@ def main():
             #torch.cuda.empty_cache()
             #time.sleep(0.5)
             print('result saved!')
-       print('Frame Interpolation saVe at -->>', save_pathimg)
+       print('Frame Interpolation saVe at -->>', SHOW_pathimg_)
        print('*'*120)
     else:
         pth_frame = pd.read_csv(pth)  ## Get rheology2023_random40folder_2linedemo.csv
